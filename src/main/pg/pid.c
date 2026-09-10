@@ -126,6 +126,12 @@ void resetPidProfile(pidProfile_t *pidProfile)
         .governor.collective_curve = 20,
         .governor.fallback_drop = 10,
         .governor.dyn_min_throttle = 80,
+        .chirp.lag_freq_hz = 3,
+        .chirp.lead_freq_hz = 30,
+        .chirp.amplitude = { 230, 230, 180 },
+        .chirp.frequency_start_deci_hz = 2,
+        .chirp.frequency_end_deci_hz = 6000,
+        .chirp.time_seconds = 20,
     );
 }
 

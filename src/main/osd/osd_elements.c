@@ -931,6 +931,11 @@ static void osdElementFlymode(osdElementParms_t *element)
         strcpy(element->buff, "ANGL");
     } else if (FLIGHT_MODE(HORIZON_MODE)) {
         strcpy(element->buff, "HORZ");
+#ifdef USE_CHIRP
+    // the additional pidChirpIsFinished() check gives visual feedback to pilots who don't have warnings enabled
+    } else if (FLIGHT_MODE(CHIRP_MODE) && !pidChirpIsFinished()) {
+        strcpy(element->buff, "CHIR");
+#endif
     } else {
         strcpy(element->buff, "ACRO");
     }

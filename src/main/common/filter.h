@@ -290,6 +290,8 @@ void firstOrderLPFInit(order1Filter_t *filter, float cutoff, float sampleRate);
 void firstOrderLPFUpdate(order1Filter_t *filter, float cutoff, float sampleRate);
 void firstOrderHPFInit(order1Filter_t *filter, float cutoff, float sampleRate);
 void firstOrderHPFUpdate(order1Filter_t *filter, float cutoff, float sampleRate);
+void firstOrderLeadLagInit(order1Filter_t *filter, float centerFreqHz, float centerPhaseDeg, float sampleRate);
+void firstOrderLeadLagUpdate(order1Filter_t *filter, float centerFreqHz, float centerPhaseDeg, float sampleRate);
 float firstOrderFilterApply(order1Filter_t *filter, float input);
 static inline float firstOrderFilterOutput(order1Filter_t *filter) { return filter->y1; }
 

@@ -282,6 +282,16 @@ void renderOsdWarning(char *warningText, bool *blinking, uint8_t *displayAttr)
         return;
     }
 
+#ifdef USE_CHIRP
+    // Visual info that chirp excitation is finished
+    if (pidChirpIsFinished()) {
+        tfp_sprintf(warningText, "CHIRP EXC FINISHED");
+        *displayAttr = DISPLAYPORT_ATTR_INFO;
+        *blinking = true;
+        return;
+    }
+#endif // USE_CHIRP
+
     // Visual beeper
     if (osdWarnGetState(OSD_WARNING_VISUAL_BEEPER) && osdGetVisualBeeperState()) {
         tfp_sprintf(warningText, "  * * * *");

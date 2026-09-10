@@ -49,3 +49,10 @@
 #define PARAM_NAME_D_MAX_ADVANCE "d_max_advance"
 #define PARAM_NAME_DEBUG_MODE "debug_mode"
 #define PARAM_NAME_DEBUG_AXIS "debug_axis"
+
+#define PARAM_NAME_CHIRP_LAG_FREQ_HZ "chirp_lag_freq_hz"
+#define PARAM_NAME_CHIRP_LEAD_FREQ_HZ "chirp_lead_freq_hz"
+#define PARAM_NAME_CHIRP_AMPLITUDE "chirp_amplitude"
+#define PARAM_NAME_CHIRP_FREQUENCY_START_DECI_HZ "chirp_frequency_start_deci_hz"
+#define PARAM_NAME_CHIRP_FREQUENCY_END_DECI_HZ "chirp_frequency_end_deci_hz"
+#define PARAM_NAME_CHIRP_TIME_SECONDS "chirp_time_seconds"

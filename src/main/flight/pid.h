@@ -22,6 +22,7 @@
 #include "common/time.h"
 #include "common/filter.h"
 #include "common/axis.h"
+#include "common/chirp.h"
 
 #include "pg/pid.h"
 #include "pg/adjustments.h"
@@ -140,6 +141,15 @@ typedef struct pid_s {
 
     pt1Filter_t offsetFloodRelaxFilter;
 
+#ifdef USE_CHIRP
+    chirp_t chirp;
+    order1Filter_t chirpFilter;
+    float chirpAmplitude[PID_AXIS_COUNT];
+    float chirpFiltered;
+    uint8_t chirpAxis;
+    bool chirpAxisToggle;
+#endif
+
 } pidData_t;
 
 
@@ -165,6 +175,10 @@ float pidGetOutput(int axis);
 float pidGetCollective(void);
 
 const pidAxisData_t * pidGetAxisData(void);
+
+#ifdef USE_CHIRP
+bool pidChirpIsFinished(void);
+#endif
 
 ADJFUN_DECLARE(PID_PROFILE)
 ADJFUN_DECLARE(PITCH_P_GAIN)

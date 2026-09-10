@@ -578,6 +578,19 @@ static void INIT_CODE pidInitFilters(const pidProfile_t *pidProfile)
 
     // Offset flood filter
     pt1FilterInit(&pid.offsetFloodRelaxFilter, 1, pid.freq);
+
+#ifdef USE_CHIRP
+    // Chirp excitation signal generator and its shaping filter
+    const float chirpAlpha = pidProfile->chirp.lead_freq_hz / (float)pidProfile->chirp.lag_freq_hz;
+    const float chirpCenterFreqHz = pidProfile->chirp.lag_freq_hz * sqrtf(chirpAlpha);
+    const float chirpCenterPhaseDeg = asinf((1.0f - chirpAlpha) / (1.0f + chirpAlpha)) / RAD;
+    firstOrderLeadLagInit(&pid.chirpFilter, chirpCenterFreqHz, chirpCenterPhaseDeg, pid.freq);
+    chirpInit(&pid.chirp,
+        pidProfile->chirp.frequency_start_deci_hz / 10.0f,
+        pidProfile->chirp.frequency_end_deci_hz / 10.0f,
+        pidProfile->chirp.time_seconds,
+        lrintf(pid.dT * 1e6f));
+#endif
 }
 
 void INIT_CODE pidLoadProfile(const pidProfile_t *pidProfile)
@@ -706,6 +719,18 @@ void INIT_CODE pidLoadProfile(const pidProfile_t *pidProfile)
     const uint8_t offset_flood_relax_freq = constrain(pidProfile->offset_flood_relax_cutoff, 1, 100);
     pt1FilterUpdate(&pid.offsetFloodRelaxFilter, offset_flood_relax_freq, pid.freq);
 
+#ifdef USE_CHIRP
+    // Chirp excitation amplitude and shaping filter (safe to change live; the
+    // sweep shape itself is only re-derived at boot, in pidInitFilters)
+    for (int i = 0; i < PID_AXIS_COUNT; i++)
+        pid.chirpAmplitude[i] = pidProfile->chirp.amplitude[i];
+
+    const float chirpAlpha = pidProfile->chirp.lead_freq_hz / (float)pidProfile->chirp.lag_freq_hz;
+    const float chirpCenterFreqHz = pidProfile->chirp.lag_freq_hz * sqrtf(chirpAlpha);
+    const float chirpCenterPhaseDeg = asinf((1.0f - chirpAlpha) / (1.0f + chirpAlpha)) / RAD;
+    firstOrderLeadLagUpdate(&pid.chirpFilter, chirpCenterFreqHz, chirpCenterPhaseDeg, pid.freq);
+#endif
+
     // Initialise sub-profiles
     governorInitProfile(pidProfile);
 #ifdef USE_ACC
@@ -811,6 +836,38 @@ static float applyItermRelax(int axis, float itermError, float gyroRate, float s
 }
 
 
+#ifdef USE_CHIRP
+
+// Advances the chirp excitation generator exactly once per control loop
+// iteration (pidApplySetpoint runs once per axis, three times per loop --
+// calling chirpUpdate() from there would sweep the frequency 3x too fast).
+static void pidUpdateChirpSignal(void)
+{
+    float chirp = 0.0f;
+
+    if (FLIGHT_MODE(CHIRP_MODE)) {
+        pid.chirpAxisToggle = true;  // advance chirp axis on next !CHIRP_MODE
+        if (chirpUpdate(&pid.chirp)) {
+            chirp = pid.chirp.exc;
+        }
+        DEBUG(CHIRP, 0, lrintf(5.0e3f * pid.chirp.sinarg));
+        DEBUG(CHIRP, 1, pid.chirpAxis);
+        DEBUG(CHIRP, 2, lrintf(10.0f * pid.chirp.fchirp));
+    } else if (pid.chirpAxisToggle) {
+        // toggle chirp signal logic and move to the next axis for next run
+        pid.chirpAxisToggle = false;
+        pid.chirpAxis = (pid.chirpAxis + 1 > FD_YAW) ? FD_ROLL : pid.chirpAxis + 1;
+        chirpReset(&pid.chirp);
+    }
+
+    // input / excitation shaping -- always run, even when inactive, so the
+    // filter decays smoothly rather than snapping to zero when disabled
+    pid.chirpFiltered = firstOrderFilterApply(&pid.chirpFilter, chirp);
+}
+
+#endif // USE_CHIRP
+
+
 static float pidApplySetpoint(uint8_t axis)
 {
     // Rate setpoint
@@ -831,6 +888,13 @@ static float pidApplySetpoint(uint8_t axis)
 #endif
     // Apply rescue
     setpoint = rescueApply(axis, setpoint);
+#endif
+
+#ifdef USE_CHIRP
+    // Add chirp excitation signal to the currently selected axis
+    if (axis == pid.chirpAxis) {
+        setpoint += pid.chirpAmplitude[axis] * pid.chirpFiltered;
+    }
 #endif
 
     // Save setpoint
@@ -1709,6 +1773,11 @@ void pidController(const pidProfile_t *pidProfile, timeUs_t currentTimeUs)
     // Rotate pitch/roll axis error with yaw rotation
     rotateAxisError();
 
+#ifdef USE_CHIRP
+    // Advance the chirp excitation generator once per loop iteration
+    pidUpdateChirpSignal();
+#endif
+
     // Apply PID for each axis
     switch (pid.pidMode) {
         case 4:
@@ -1744,3 +1813,10 @@ void pidController(const pidProfile_t *pidProfile, timeUs_t currentTimeUs)
     if (gyroOverflowDetected())
         pidReset();
 }
+
+#ifdef USE_CHIRP
+bool pidChirpIsFinished(void)
+{
+    return pid.chirp.isFinished;
+}
+#endif

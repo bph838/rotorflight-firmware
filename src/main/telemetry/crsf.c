@@ -487,6 +487,10 @@ static void crsfFlightModeInfo(char *buf)
         flightMode = "HORIZON";
     } else if (FLIGHT_MODE(ANGLE_MODE)) {
         flightMode = "ANGLE";
+#ifdef USE_CHIRP
+    } else if (FLIGHT_MODE(CHIRP_MODE)) {
+        flightMode = "CHIRP";
+#endif
     } else {
         flightMode = "NORMAL";
     }

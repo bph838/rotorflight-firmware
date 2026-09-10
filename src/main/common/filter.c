@@ -716,6 +716,35 @@ FAST_CODE float firstOrderFilterApply(order1Filter_t *filter, float input)
     return output;
 }
 
+// First order lead-lag phase compensator, tuned by its center frequency and the
+// phase shift (in degrees) it should produce at that frequency
+
+void firstOrderLeadLagInit(order1Filter_t *filter, float centerFreqHz, float centerPhaseDeg, float sampleRate)
+{
+    filter->x1 = 0;
+    filter->y1 = 0;
+
+    firstOrderLeadLagUpdate(filter, centerFreqHz, centerPhaseDeg, sampleRate);
+}
+
+FAST_CODE void firstOrderLeadLagUpdate(order1Filter_t *filter, float centerFreqHz, float centerPhaseDeg, float sampleRate)
+{
+    const float omega = 2.0f * M_PIf * centerFreqHz / sampleRate;
+    const float sn = sin_approx(centerPhaseDeg * RAD);
+    const float gain = (1 + sn) / (1 - sn);
+    const float alpha = (12 - sq(omega)) / (6 * omega * sqrtf(gain));  // approximate prewarping (series expansion)
+
+    filter->b0 = 1 + alpha * gain;
+    filter->b1 = 2 - filter->b0;
+    filter->a1 = 1 - alpha;
+
+    const float a0 = 1 / (1 + alpha);
+
+    filter->b0 *= a0;
+    filter->b1 *= a0;
+    filter->a1 *= a0;
+}
+
 
 // Generic Low-Pass Filter (LPF)
 

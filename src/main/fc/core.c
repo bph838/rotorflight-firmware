@@ -705,6 +705,16 @@ void processRxModes(timeUs_t currentTimeUs)
     acroTrainerSetState(FLIGHT_MODE(TRAINER_MODE));
 #endif // USE_ACRO_TRAINER
 
+#ifdef USE_CHIRP
+    // Chirp excitation: don't allow it to interfere with failsafe or an autonomous rescue
+    if (IS_RC_MODE_ACTIVE(BOXCHIRP) && !FLIGHT_MODE(FAILSAFE_MODE) &&
+        !FLIGHT_MODE(GPS_RESCUE_MODE) && !FLIGHT_MODE(RESCUE_MODE)) {
+        ENABLE_FLIGHT_MODE(CHIRP_MODE);
+    } else {
+        DISABLE_FLIGHT_MODE(CHIRP_MODE);
+    }
+#endif // USE_CHIRP
+
     if (!IS_RC_MODE_ACTIVE(BOXPREARM) && ARMING_FLAG(WAS_ARMED_WITH_PREARM)) {
         DISABLE_ARMING_FLAG(WAS_ARMED_WITH_PREARM);
     }

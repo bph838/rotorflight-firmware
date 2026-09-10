@@ -78,6 +78,19 @@ typedef struct {
     uint16_t lookahead_ms;         // The lookahead window in milliseconds used to reduce overshoot
 } pidTrainerMode_t;
 
+// Note: kept unconditional (not #ifdef USE_CHIRP) so it can sit inside the
+// RESET_CONFIG(...) designated-initializer macro call in pid.c -- embedding a
+// preprocessor directive inside macro arguments is non-portable. Only the
+// feature's *behaviour* (flight/pid.c, CLI, MSP, blackbox, OSD) is gated.
+typedef struct {
+    uint8_t     lag_freq_hz;               // lead-lag filter pole to shape the excitation signal
+    uint8_t     lead_freq_hz;              // lead-lag filter zero
+    uint16_t    amplitude[PID_AXIS_COUNT]; // excitation amplitude in deg/s, per axis
+    uint16_t    frequency_start_deci_hz;   // start frequency in units of 0.1 hz
+    uint16_t    frequency_end_deci_hz;     // end frequency in units of 0.1 hz
+    uint8_t     time_seconds;              // excitation time
+} pidChirpConfig_t;
+
 typedef struct {
     uint8_t     mode;
     uint8_t     flip_mode;
@@ -152,6 +165,7 @@ typedef struct pidProfile_s {
     pidTrainerMode_t    trainer;
     pidRescueConfig_t   rescue;
     governorProfile_t   governor;
+    pidChirpConfig_t    chirp;
 
 } pidProfile_t;
 

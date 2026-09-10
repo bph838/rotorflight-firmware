@@ -1190,6 +1190,15 @@ const clivalue_t valueTable[] = {
     { "acro_trainer_gain",          VAR_UINT8  | PROFILE_VALUE, .config.minmaxUnsigned = { 25, 255 }, PG_PID_PROFILE, offsetof(pidProfile_t, trainer.gain) },
 #endif // USE_ACRO_TRAINER
 
+#ifdef USE_CHIRP
+    { PARAM_NAME_CHIRP_LAG_FREQ_HZ,             VAR_UINT8  | PROFILE_VALUE, .config.minmaxUnsigned = { 1, 100 }, PG_PID_PROFILE, offsetof(pidProfile_t, chirp.lag_freq_hz) },
+    { PARAM_NAME_CHIRP_LEAD_FREQ_HZ,            VAR_UINT8  | PROFILE_VALUE, .config.minmaxUnsigned = { 1, 200 }, PG_PID_PROFILE, offsetof(pidProfile_t, chirp.lead_freq_hz) },
+    { PARAM_NAME_CHIRP_AMPLITUDE,               VAR_UINT16 | PROFILE_VALUE | MODE_ARRAY, .config.array.length = PID_AXIS_COUNT, PG_PID_PROFILE, offsetof(pidProfile_t, chirp.amplitude) },
+    { PARAM_NAME_CHIRP_FREQUENCY_START_DECI_HZ, VAR_UINT16 | PROFILE_VALUE, .config.minmaxUnsigned = { 1, 1000 }, PG_PID_PROFILE, offsetof(pidProfile_t, chirp.frequency_start_deci_hz) },
+    { PARAM_NAME_CHIRP_FREQUENCY_END_DECI_HZ,   VAR_UINT16 | PROFILE_VALUE, .config.minmaxUnsigned = { 1, 10000 }, PG_PID_PROFILE, offsetof(pidProfile_t, chirp.frequency_end_deci_hz) },
+    { PARAM_NAME_CHIRP_TIME_SECONDS,            VAR_UINT8  | PROFILE_VALUE, .config.minmaxUnsigned = { 1, 255 }, PG_PID_PROFILE, offsetof(pidProfile_t, chirp.time_seconds) },
+#endif // USE_CHIRP
+
     { "rescue_mode",                VAR_UINT8  | PROFILE_VALUE | MODE_LOOKUP, .config.lookup = { TABLE_RESCUE_MODE }, PG_PID_PROFILE, offsetof(pidProfile_t, rescue.mode) },
     { "rescue_flip",                VAR_UINT8  | PROFILE_VALUE | MODE_LOOKUP, .config.lookup = { TABLE_OFF_ON }, PG_PID_PROFILE, offsetof(pidProfile_t, rescue.flip_mode) },
     { "rescue_flip_gain",           VAR_UINT8  | PROFILE_VALUE, .config.minmaxUnsigned = { 5, 250 }, PG_PID_PROFILE, offsetof(pidProfile_t, rescue.flip_gain) },
